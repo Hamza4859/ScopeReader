@@ -2,61 +2,82 @@ import time
 import pyvisa
 
 
-def get_target_measurements(
-    scope_ip="10.24.98.202", measure_item="MINimum"
-) -> dict[str, float | None]:
-    """Connects to the scope, triggers a single acquisition, and returns
-
-    a dict mapping ['Frequency', 'V1', 'V2'] to their numerical values (or None
-    if invalid).
-    """
-    channel_map = {10: "Frequency", 11: "V1", 12: "V2"}
-    results = {}
-
+def _query_channel_measurement(
+    channel: int,
+    measure_item: str = "MINimum",
+    scope_ip: str = "10.24.98.202",
+) -> float | None:
+    """Helper function to execute the PyVISA query for a single channel."""
     rm = pyvisa.ResourceManager("@py")
     try:
-        scope = rm.open_resource(
-            f"TCPIP0::{scope_ip}::INSTR", timeout=10000
-        )  # 10s timeout
+        scope = rm.open_resource(f"TCPIP0::{scope_ip}::INSTR", timeout=10000)
         scope.write("*CLS")
         scope.write(":MEASure:MODE ON")
 
-        # 1. Enable specified measurement item on targets
-        for ch in channel_map:
-            scope.write(f":MEASure:CHANnel{ch}:{measure_item}:STATe ON")
+        # Enable measurement on the target channel
+        scope.write(f":MEASure:CHANnel{channel}:{measure_item}:STATe ON")
 
-        # 2. Single acquisition trigger
+        # Trigger single acquisition
         scope.write(":SSTart")
         time.sleep(0.5)
 
-        # 3. Read values
-        for ch, label in channel_map.items():
-            cmd = f":MEASure:CHANnel{ch}:{measure_item}:VALue?"
-            response = scope.query(cmd).strip()
+        # Read value
+        cmd = f":MEASure:CHANnel{channel}:{measure_item}:VALue?"
+        response = scope.query(cmd).strip()
 
-            raw_val = response.split()[-1] if " " in response else response
-
-            # Filter out invalid/overflow responses (e.g., 9.9E+37 or NaN)
-            if (
-                "NAN" in raw_val.upper()
-                or "9.9E+37" in raw_val
-                or "9.90000E+37" in raw_val
-            ):
-                results[label] = None
-            else:
-                try:
-                    results[label] = float(raw_val)
-                except ValueError:
-                    results[label] = None
+        raw_val = response.split()[-1] if " " in response else response
 
         scope.close()
-        return results
 
-    except pyvisa.VisaIOError:
-        return {label: None for label in channel_map.values()}
+        # Check for invalid / off-channel responses
+        if (
+            "NAN" in raw_val.upper()
+            or "9.9E+37" in raw_val
+            or "9.90000E+37" in raw_val
+        ):
+            return None
+
+        return float(raw_val)
+
+    except (pyvisa.VisaIOError, ValueError):
+        return None
 
 
-# Usage example:
-data = get_target_measurements()
-print(data)
-# Output: {'Frequency': 0.0012, 'V1': -1.245, 'V2': 3.312}
+# --- The 3 Dedicated Helper Methods ---
+
+
+def get_frequency(
+    scope_ip: str = "10.24.98.202", measure_item: str = "MINimum"
+) -> float | None:
+    """Returns the measurement value for Frequency (Channel 10)."""
+    return _query_channel_measurement(
+        channel=10, measure_item=measure_item, scope_ip=scope_ip
+    )
+
+
+def get_v1(
+    scope_ip: str = "10.24.98.202", measure_item: str = "MINimum"
+) -> float | None:
+    """Returns the measurement value for V1 (Channel 11)."""
+    return _query_channel_measurement(
+        channel=11, measure_item=measure_item, scope_ip=scope_ip
+    )
+
+
+def get_v2(
+    scope_ip: str = "10.24.98.202", measure_item: str = "MINimum"
+) -> float | None:
+    """Returns the measurement value for V2 (Channel 12)."""
+    return _query_channel_measurement(
+        channel=12, measure_item=measure_item, scope_ip=scope_ip
+    )
+
+
+# --- Usage Example ---
+freq = get_frequency()
+v1 = get_v1()
+v2 = get_v2()
+
+print(f"Frequency: {freq}")
+print(f"V1: {v1}")
+print(f"V2: {v2}")
