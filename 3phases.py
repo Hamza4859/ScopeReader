@@ -17,10 +17,6 @@ def _query_channel_measurement(
         # Enable measurement on the target channel
         scope.write(f":MEASure:CHANnel{channel}:{measure_item}:STATe ON")
 
-        # Trigger single acquisition
-        scope.write(":SSTart")
-        time.sleep(0.5)
-
         # Read value
         cmd = f":MEASure:CHANnel{channel}:{measure_item}:VALue?"
         response = scope.query(cmd).strip()
