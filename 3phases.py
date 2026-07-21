@@ -7,7 +7,7 @@ def _query_channel_measurement(
     measure_item: str = "MINimum",
     scope_ip: str = "10.24.98.202",
 ) -> float | None:
-    """Helper function to execute the PyVISA query for a single channel."""
+    """Helper function to query a single channel and return a single float or None."""
     rm = pyvisa.ResourceManager("@py")
     try:
         scope = rm.open_resource(f"TCPIP0::{scope_ip}::INSTR", timeout=10000)
@@ -37,7 +37,9 @@ def _query_channel_measurement(
         ):
             return None
 
-        return float(raw_val)
+        # Return strictly a single float value
+        val = float(raw_val)
+        return val
 
     except (pyvisa.VisaIOError, ValueError):
         return None
@@ -49,7 +51,7 @@ def _query_channel_measurement(
 def get_frequency(
     scope_ip: str = "10.24.98.202", measure_item: str = "MINimum"
 ) -> float | None:
-    """Returns the measurement value for Frequency (Channel 10)."""
+    """Returns a single float for Frequency (CH10) or None."""
     return _query_channel_measurement(
         channel=10, measure_item=measure_item, scope_ip=scope_ip
     )
@@ -58,7 +60,7 @@ def get_frequency(
 def get_v1(
     scope_ip: str = "10.24.98.202", measure_item: str = "MINimum"
 ) -> float | None:
-    """Returns the measurement value for V1 (Channel 11)."""
+    """Returns a single float for V1 (CH11) or None."""
     return _query_channel_measurement(
         channel=11, measure_item=measure_item, scope_ip=scope_ip
     )
@@ -67,17 +69,18 @@ def get_v1(
 def get_v2(
     scope_ip: str = "10.24.98.202", measure_item: str = "MINimum"
 ) -> float | None:
-    """Returns the measurement value for V2 (Channel 12)."""
+    """Returns a single float for V2 (CH12) or None."""
     return _query_channel_measurement(
         channel=12, measure_item=measure_item, scope_ip=scope_ip
     )
 
 
-# --- Usage Example ---
+# --- Example Usage ---
 freq = get_frequency()
 v1 = get_v1()
 v2 = get_v2()
 
-print(f"Frequency: {freq}")
-print(f"V1: {v1}")
-print(f"V2: {v2}")
+# Check types explicitly
+print(f"Frequency: {freq} (Type: {type(freq).__name__})")
+print(f"V1: {v1} (Type: {type(v1).__name__})")
+print(f"V2: {v2} (Type: {type(v2).__name__})")
