@@ -29,13 +29,6 @@ def _query_channel_measurement(
 
         scope.close()
 
-        # Check for invalid / off-channel responses
-        if (
-            "NAN" in raw_val.upper()
-            or "9.9E+37" in raw_val
-            or "9.90000E+37" in raw_val
-        ):
-            return None
 
         # Return strictly a single float value
         val = float(raw_val)
