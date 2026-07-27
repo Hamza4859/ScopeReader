@@ -1,86 +1,53 @@
-import time
 import pyvisa
 
-SCOPE_IP = "10.24.98.202"
+SCOPE_IP = "10.24.98.200"
 
-# 1. Initialize Connection
+
+def query_channel_measurement(
+    scope,
+    channel: int,
+    measure_item: str = "MINimum",
+) -> float | None:
+    """Helper function to query a single channel using an open scope session."""
+    try:
+        scope.write("*CLS")
+        scope.write(":MEASure:MODE ON")
+
+        # Enable measurement on target channel
+        scope.write(f":MEASure:CHANnel{channel}:{measure_item}:STATe ON")
+
+        # Read value
+        cmd = f":MEASure:CHANnel{channel}:{measure_item}:VALue?"
+        response = scope.query(cmd).strip()
+
+        raw_val = response.split()[-1] if " " in response else response
+
+        # Return strictly a single float value
+        return float(raw_val)
+
+    except (pyvisa.VisaIOError, ValueError):
+        return None
+
+
+# --- Execution ---
+
+channels = list(range(1, 17))
+measure_item = "MINimum"
+
 rm = pyvisa.ResourceManager("@py")
-scope = rm.open_resource(f"TCPIP0::{SCOPE_IP}::INSTR")
-scope.timeout = 10000  # 10s timeout
 
-
-def drain_errors():
-    """Clear and print error queue for debugging."""
-    print("\n--- Error Queue ---")
-    while True:
-        try:
-            err = scope.query(":STATus:ERRor?").strip()
-            if err.startswith("0,") or err == "0":
-                break
-            print("  Scope Error:", err)
-        except pyvisa.VisaIOError:
-            break
-
-
-# 2. Setup Scope
-scope.write("*CLS")
-
-# Optional: Set monitor verbosity OFF if you only want raw numeric values,
-# or set ON if you want units included. Here we explicitly disable verbose
-# mode so we get clean values, but the parser below handles both!
-# scope.write(":MONitor:VERBose OFF")
-
-print("\n" + "=" * 60)
-print("CONFIGURING & READING MONITOR DATA (:MONitor:ASENd?)")
-print("=" * 60)
-
-# 3. Control Acquisition (Stop -> Single Start -> Wait)
 try:
-    print("Triggering single acquisition (:SSTart)...")
-    scope.write(":SSTart")
-    time.sleep(0.5)  # Wait for acquisition/measurement update
+    # Open the VISA connection ONCE for all 16 channels
+    with rm.open_resource(f"TCPIP0::{SCOPE_IP}::INSTR", timeout=10000) as scope:
+        for channel in channels:
+            val = query_channel_measurement(
+                scope=scope, channel=channel, measure_item=measure_item
+            )
+
+            val_str = f"{val:.4f}" if val is not None else "None"
+            type_name = type(val).__name__ if val is not None else "NoneType"
+
+            print(f"Channel {channel:02d} ({measure_item}): {val_str} (Type: {type_name})")
 
 except pyvisa.VisaIOError as e:
-    print(f"Acquisition control error: {e}")
-    drain_errors()
-
-# 4. Fetch All Active Channels via Monitor Query
-try:
-    # Fetch all monitor data in a single ASCII string
-    raw_response = scope.query(":MONitor:ASENd?").strip()
-    
-    # Split response by semicolon (0x3b) delimiter
-    channel_entries = [entry.strip() for entry in raw_response.split(";") if entry.strip()]
-
-    print(f"\nReceived {len(channel_entries)} channel entries:\n")
-
-    for idx, entry in enumerate(channel_entries, start=1):
-        # Parse entry depending on verbose mode (Label Value Unit vs Raw Value)
-        tokens = entry.split()
-
-        if not tokens:
-            continue
-
-        # Extract numeric candidate (usually the center token if verbose, or the only token)
-        val_str = tokens[-2] if len(tokens) >= 3 else tokens[0]
-        unit = tokens[-1] if len(tokens) >= 3 else ""
-
-        # Handle overflow / invalid values
-        if "NAN" in val_str.upper() or "9.9E+37" in val_str or "9.90000E+37" in val_str:
-            formatted_val = "N/A (Signal invalid or Channel OFF)"
-        else:
-            try:
-                val_float = float(val_str)
-                formatted_val = f"{val_float:.4f} {unit}".strip()
-            except ValueError:
-                formatted_val = f"Raw string -> '{entry}'"
-
-        print(f"Channel Entry {idx:02d}: {formatted_val}")
-
-except pyvisa.VisaIOError as e:
-    print(f"Failed to query :MONitor:ASENd? - {e}")
-    drain_errors()
-
-# 5. Clean up
-scope.close()
-print("\nConnection closed successfully.")
+    print(f"Failed to connect to oscilloscope at {SCOPE_IP}: {e}")

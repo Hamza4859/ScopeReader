@@ -6,8 +6,8 @@ SCOPE_IP = "10.24.98.200"
 
 def _query_channel_measurement(
     channel: int,
-    measure_item: str = "MINimum",
     scope_ip: str = SCOPE_IP,
+    measure_item: str = "MINimum",
 ) -> float | None:
     """Helper function to query a single channel and return a single float or None."""
     rm = pyvisa.ResourceManager("@py")
@@ -55,7 +55,7 @@ def stop_scope(scope_ip: str = SCOPE_IP) -> None:
         pass
 
 
-# --- The 3 Dedicated Helper Methods ---
+# --- The Dedicated Helper Methods ---
 
 
 def get_frequency(
@@ -63,7 +63,7 @@ def get_frequency(
 ) -> float | None:
     """Returns a single float for Frequency (CH10) or None."""
     return _query_channel_measurement(
-        channel=10, measure_item=measure_item, scope_ip=scope_ip
+        channel=10, scope_ip=scope_ip, measure_item=measure_item
     )
 
 
@@ -72,7 +72,7 @@ def get_v1(
 ) -> float | None:
     """Returns a single float for V1 (CH11) or None."""
     return _query_channel_measurement(
-        channel=11, measure_item=measure_item, scope_ip=scope_ip
+        channel=11, scope_ip=scope_ip, measure_item=measure_item
     )
 
 
@@ -81,16 +81,61 @@ def get_v2(
 ) -> float | None:
     """Returns a single float for V2 (CH12) or None."""
     return _query_channel_measurement(
-        channel=12, measure_item=measure_item, scope_ip=scope_ip
+        channel=12, scope_ip=scope_ip, measure_item=measure_item
     )
 
 
-# --- Example Usage ---
-freq = get_frequency()
-v1 = get_v1()
-v2 = get_v2()
+def get_3phases_values(
+    scope_ip: str = SCOPE_IP, measure_item: str = "MINimum"
+) -> list[float | None]:
+    """Queries hardcoded channels 10, 11, 12."""
+    channels = [10, 11, 12]
+    return [
+        _query_channel_measurement(
+            channel=ch, scope_ip=scope_ip, measure_item=measure_item
+        )
+        for ch in channels
+    ]
+
+
+def get_6phases_values(
+    scope_ip: str = SCOPE_IP, measure_item: str = "MINimum"
+) -> list[float | None]:
+    """Queries hardcoded channels 10, 11, 12, 13, 14."""
+    channels = [10, 11, 12, 13, 14]
+    return [
+        _query_channel_measurement(
+            channel=ch, scope_ip=scope_ip, measure_item=measure_item
+        )
+        for ch in channels
+    ]
+
+
+def get_9phases_values(
+    scope_ip: str = SCOPE_IP, measure_item: str = "MINimum"
+) -> list[float | None]:
+    """Queries hardcoded channels 10, 11, 12, 13, 14, 15, 16."""
+    channels = [10, 11, 12, 13, 14, 15, 16]
+    return [
+        _query_channel_measurement(
+            channel=ch, scope_ip=scope_ip, measure_item=measure_item
+        )
+        for ch in channels
+    ]
+
+
+
+"""""
+# Target IP address (defaults to SCOPE_IP if omitted)
+target_ip = SCOPE_IP
+
+phases_3 = get_3phases_values(scope_ip=target_ip)
+phases_6 = get_6phases_values(scope_ip=target_ip)
+phases_9 = get_9phases_values(scope_ip=target_ip)
 
 # Check types explicitly
-print(f"Frequency: {freq} (Type: {type(freq).__name__})")
-print(f"V1: {v1} (Type: {type(v1).__name__})")
-print(f"V2: {v2} (Type: {type(v2).__name__})")
+
+print(f"3 Phases: {phases_3}")
+print(f"6 Phases: {phases_6}")
+print(f"9 Phases: {phases_9}")
+"""
