@@ -1,11 +1,13 @@
 import time
 import pyvisa
 
+SCOPE_IP = "10.24.98.200"
+
 
 def _query_channel_measurement(
     channel: int,
     measure_item: str = "MINimum",
-    scope_ip: str = "10.24.98.202",
+    scope_ip: str = SCOPE_IP,
 ) -> float | None:
     """Helper function to query a single channel and return a single float or None."""
     rm = pyvisa.ResourceManager("@py")
@@ -25,7 +27,6 @@ def _query_channel_measurement(
 
         scope.close()
 
-
         # Return strictly a single float value
         val = float(raw_val)
         return val
@@ -34,11 +35,31 @@ def _query_channel_measurement(
         return None
 
 
+def start_scope(scope_ip: str = SCOPE_IP) -> None:
+    rm = pyvisa.ResourceManager("@py")
+    try:
+        scope = rm.open_resource(f"TCPIP0::{scope_ip}::INSTR", timeout=10000)
+        scope.write(":SSTart")
+        scope.close()
+    except pyvisa.VisaIOError:
+        pass
+
+
+def stop_scope(scope_ip: str = SCOPE_IP) -> None:
+    rm = pyvisa.ResourceManager("@py")
+    try:
+        scope = rm.open_resource(f"TCPIP0::{scope_ip}::INSTR", timeout=10000)
+        scope.write(":STOP")
+        scope.close()
+    except pyvisa.VisaIOError:
+        pass
+
+
 # --- The 3 Dedicated Helper Methods ---
 
 
 def get_frequency(
-    scope_ip: str = "10.24.98.202", measure_item: str = "MINimum"
+    scope_ip: str = SCOPE_IP, measure_item: str = "MINimum"
 ) -> float | None:
     """Returns a single float for Frequency (CH10) or None."""
     return _query_channel_measurement(
@@ -47,7 +68,7 @@ def get_frequency(
 
 
 def get_v1(
-    scope_ip: str = "10.24.98.202", measure_item: str = "MINimum"
+    scope_ip: str = SCOPE_IP, measure_item: str = "MINimum"
 ) -> float | None:
     """Returns a single float for V1 (CH11) or None."""
     return _query_channel_measurement(
@@ -56,7 +77,7 @@ def get_v1(
 
 
 def get_v2(
-    scope_ip: str = "10.24.98.202", measure_item: str = "MINimum"
+    scope_ip: str = SCOPE_IP, measure_item: str = "MINimum"
 ) -> float | None:
     """Returns a single float for V2 (CH12) or None."""
     return _query_channel_measurement(

@@ -4,7 +4,7 @@ import pyvisa
 # ==========================================
 # CONFIGURATION
 # ==========================================
-SCOPE_IP = "10.24.98.202"
+SCOPE_IP = "10.24.98.200"
 TIMEOUT_MS = 5000  # 5 seconds timeout for commands
 
 
