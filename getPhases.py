@@ -123,19 +123,52 @@ def get_9phases_values(
         for ch in channels
     ]
 
+def get_phases_values(
+    phase_count: str,
+    scope_ip: str = SCOPE_IP,
+    measure_item: str = "MINimum",
+) -> list[float | None]:
+    """Dynamically fetches phase measurements (max 7 channels: 10 to 16)
+
+    and ensures the returned list is always padded to length 7 with -9999.
+    """
+    phase_map = {
+        "3": get_3phases_values,
+        "6": get_6phases_values,
+        "9": get_9phases_values,
+    }
+
+    if phase_count not in phase_map:
+        raise ValueError(
+            f"Invalid phase_count '{phase_count}'. Expected '3', '6', or '9'."
+        )
+
+    # 1. Fetch raw measurements
+    raw_values = phase_map[phase_count](
+        scope_ip=scope_ip, measure_item=measure_item
+    )
+
+    # 2. Replace any failed queries (None) with -9999
+    cleaned_values = [
+        val if val is not None else -9999.0 for val in raw_values
+    ]
+
+    # 3. Pad to length 7 with -9999 for non-queried channels (or slice to 7 max)
+    padded_values = (cleaned_values + [-9999.0] * 7)[:7]
+
+    return padded_values
 
 
 """""
 # Target IP address (defaults to SCOPE_IP if omitted)
 target_ip = SCOPE_IP
 
-phases_3 = get_3phases_values(scope_ip=target_ip)
-phases_6 = get_6phases_values(scope_ip=target_ip)
-phases_9 = get_9phases_values(scope_ip=target_ip)
+# Testing all 3 dynamic phase usages
+phases_3 = get_phases_values("3", scope_ip=target_ip)
+phases_6 = get_phases_values("6", scope_ip=target_ip)
+phases_9 = get_phases_values("9", scope_ip=target_ip)
 
-# Check types explicitly
-
-print(f"3 Phases: {phases_3}")
-print(f"6 Phases: {phases_6}")
-print(f"9 Phases: {phases_9}")
+print(f"3 Phases (len={len(phases_3)}): {phases_3}")
+print(f"6 Phases (len={len(phases_6)}): {phases_6}")
+print(f"9 Phases (len={len(phases_9)}): {phases_9}")
 """
