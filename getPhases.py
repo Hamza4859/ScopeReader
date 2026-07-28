@@ -58,33 +58,6 @@ def stop_scope(scope_ip: str = SCOPE_IP) -> None:
 # --- The Dedicated Helper Methods ---
 
 
-def get_frequency(
-    scope_ip: str = SCOPE_IP, measure_item: str = "MINimum"
-) -> float | None:
-    """Returns a single float for Frequency (CH10) or None."""
-    return _query_channel_measurement(
-        channel=10, scope_ip=scope_ip, measure_item=measure_item
-    )
-
-
-def get_v1(
-    scope_ip: str = SCOPE_IP, measure_item: str = "MINimum"
-) -> float | None:
-    """Returns a single float for V1 (CH11) or None."""
-    return _query_channel_measurement(
-        channel=11, scope_ip=scope_ip, measure_item=measure_item
-    )
-
-
-def get_v2(
-    scope_ip: str = SCOPE_IP, measure_item: str = "MINimum"
-) -> float | None:
-    """Returns a single float for V2 (CH12) or None."""
-    return _query_channel_measurement(
-        channel=12, scope_ip=scope_ip, measure_item=measure_item
-    )
-
-
 def get_3phases_values(
     scope_ip: str = SCOPE_IP, measure_item: str = "MINimum"
 ) -> list[float | None]:
