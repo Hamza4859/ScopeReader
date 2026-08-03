@@ -10,8 +10,8 @@ BASE_PATH = r"C:\Essais\02 - Rapport"
 class TestType(str, Enum):
     BMF = "BMF"
     OVERSPEED = "OverSpeed"
-    FREEWHEEL = "FreeWheel"
-    LOCKEDWHEEL = "LockedWheel"
+    FREEWHEEL = "Free Wheel"
+    LOCKEDWHEEL = "Locked Wheel"
     E11 = "E11"
 
 
@@ -50,3 +50,4 @@ def create_test_report_directory(
     full_path.mkdir(parents=True, exist_ok=True)
 
     return full_path
+
