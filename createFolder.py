@@ -1,6 +1,8 @@
+import shutil
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
+
 
 # Global configuration - change this to update the report location everywhere
 BASE_PATH = r"C:\Essais\02 - Rapport"
@@ -46,3 +48,28 @@ def create_test_report_directory(
     full_path.mkdir(parents=True, exist_ok=True)
 
     return str(full_path)
+
+
+def copy_files_content(source: str, destination: str) -> None:
+    source_path = Path(source)
+    destination_path = Path(destination)
+
+    if not source_path.exists():
+        raise FileNotFoundError(f"Source path does not exist: {source}")
+
+    if source_path.is_file():
+        if destination_path.is_dir():
+            destination_path = destination_path / source_path.name
+        else:
+            destination_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source_path, destination_path)
+
+    elif source_path.is_dir():
+        destination_path.mkdir(parents=True, exist_ok=True)
+        for item in source_path.iterdir():
+            if item.is_file():
+                shutil.copy2(item, destination_path / item.name)
+
+    else:
+        raise ValueError(f"Source path is neither a file nor a directory: {source}")
+
