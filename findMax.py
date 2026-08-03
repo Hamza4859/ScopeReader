@@ -20,17 +20,3 @@ def get_max_values(csv_string):
         max_col4 = val4 if max_col4 is None else max(max_col4, val4)
 
     return max_col2, max_col3, max_col4
-
-"""
-if __name__ == "__main__":
-    path = r"C:\Users\hamza.rtelbennani\Downloads\10557250-SN_SP24000556_VRMS.csv"
-
-    # Read the file's content into a string first
-    with open(path, newline='', encoding='utf-8') as f:
-        csv_content = f.read()
-
-    m2, m3, m4 = get_max_values(csv_content)
-    print(f"Max of column 2: {m2}")
-    print(f"Max of column 3: {m3}")
-    print(f"Max of column 4: {m4}")
-"""
