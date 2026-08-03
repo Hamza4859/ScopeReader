@@ -1,7 +1,7 @@
 import time
 import pyvisa
 
-SCOPE_IP = "10.24.98.200"
+SCOPE_IP = "10.24.98.206"
 
 
 def _query_channel_measurement(
@@ -132,9 +132,14 @@ def get_phases_values(
     return padded_values
 
 
-"""""
-# Target IP address (defaults to SCOPE_IP if omitted)
+
 target_ip = SCOPE_IP
+
+start_scope(target_ip)
+
+
+# Target IP address (defaults to SCOPE_IP if omitted)
+
 
 # Testing all 3 dynamic phase usages
 phases_3 = get_phases_values("3", scope_ip=target_ip)
@@ -144,4 +149,3 @@ phases_9 = get_phases_values("9", scope_ip=target_ip)
 print(f"3 Phases (len={len(phases_3)}): {phases_3}")
 print(f"6 Phases (len={len(phases_6)}): {phases_6}")
 print(f"9 Phases (len={len(phases_9)}): {phases_9}")
-"""
