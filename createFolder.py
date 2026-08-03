@@ -55,8 +55,3 @@ def create_test_report_directory(
     full_path.mkdir(parents=True, exist_ok=True)
 
     return full_path
-
-
-path = create_test_report_directory("10434039", "DEVELOP", "CO205A", "OverSpeed")
-
-print(path)
