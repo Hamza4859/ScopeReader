@@ -6,6 +6,7 @@ from pathlib import Path
 
 # Global configuration - change this to update the report location everywhere
 BASE_PATH = r"C:\Essais\02 - Rapport"
+EOL_TESTING_BASE_PATH = r"C:\EOL_Testing"
 
 
 # 1. Define the custom data type for TestType (used internally for validation)
@@ -50,12 +51,24 @@ def create_test_report_directory(
     return str(full_path)
 
 
-def move_files_content(source: str, destination: str) -> None:
-    source_path = Path(source)
-    destination_path = Path(destination)
+def get_most_recent_folder(base_path: str) -> Path:
+    base = Path(base_path)
 
-    if not source_path.exists():
-        raise FileNotFoundError(f"Source path does not exist: {source}")
+    if not base.exists():
+        raise FileNotFoundError(f"Base path does not exist: {base_path}")
+
+    folders = [p for p in base.iterdir() if p.is_dir()]
+
+    if not folders:
+        raise FileNotFoundError(f"No subfolders found in: {base_path}")
+
+    most_recent = max(folders, key=lambda p: p.stat().st_mtime)
+    return most_recent
+
+
+def move_files_content(destination: str) -> None:
+    source_path = get_most_recent_folder(EOL_TESTING_BASE_PATH)
+    destination_path = Path(destination)  # string -> Path conversion happens here
 
     if source_path.is_file():
         if destination_path.is_dir():
@@ -71,7 +84,8 @@ def move_files_content(source: str, destination: str) -> None:
                 shutil.move(str(item), str(destination_path / item.name))
 
     else:
-        raise ValueError(f"Source path is neither a file nor a directory: {source}")
+        raise ValueError(f"Source path is neither a file nor a directory: {source_path}")
+        
 
 
 def copy_files_content(source: str, destination: str) -> None:
