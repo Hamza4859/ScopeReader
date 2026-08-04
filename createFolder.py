@@ -9,7 +9,7 @@ BASE_PATH = r"C:\Essais\02 - Rapport"
 EOL_TESTING_BASE_PATH = r"C:\EOL_Testing"
 
 
-# 1. Define the custom data type for TestType (used internally for validation)
+#Define allowed TestType  
 class TestType(str, Enum):
     BMF = "BMF"
     OVERSPEED = "OverSpeed"
@@ -18,7 +18,7 @@ class TestType(str, Enum):
     E11 = "E11"
 
 
-# 2. Helper Method
+#Create test report directory
 def create_test_report_directory(
     pn: str,
     motor_sn: str,
@@ -51,6 +51,7 @@ def create_test_report_directory(
     return str(full_path)
 
 
+#Get most recent folder
 def get_most_recent_folder(base_path: str) -> Path:
     base = Path(base_path)
 
@@ -66,6 +67,7 @@ def get_most_recent_folder(base_path: str) -> Path:
     return most_recent
 
 
+#Moves only the content of the source
 def move_files_content(destination: str) -> None:
     source_path = get_most_recent_folder(EOL_TESTING_BASE_PATH)
     destination_path = Path(destination)  # string -> Path conversion happens here
@@ -88,6 +90,7 @@ def move_files_content(destination: str) -> None:
         
 
 
+#Copy only the content of the folder
 def copy_files_content(source: str, destination: str) -> None:
     source_path = Path(source)
     destination_path = Path(destination)
@@ -110,4 +113,3 @@ def copy_files_content(source: str, destination: str) -> None:
 
     else:
         raise ValueError(f"Source path is neither a file nor a directory: {source}")
-
