@@ -28,4 +28,4 @@ def get_max_values(folder_path_str: str):
             max_col3 = val3 if max_col3 is None else max(max_col3, val3)
             max_col4 = val4 if max_col4 is None else max(max_col4, val4)
 
-    return max_col2, max_col3, max_col4
+    return [max_col2, max_col3, max_col4]
