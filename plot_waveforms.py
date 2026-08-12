@@ -9,7 +9,7 @@ Usage:
     python plot_waveforms.py --csvs ch01.csv ch02.csv ch03.csv --output plot.png
 """
 
-import os  # <-- MISSING IMPORT (added)
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -44,13 +44,13 @@ def plot_csv_files(csv_paths, output_path=None, title=None, max_points=MAX_PLOT_
     Plot up to 6 waveform CSV files in separate subplots.
 
     Parameters:
-        csv_paths (list): List of up to 6 file paths (strings). Paths that are None or empty are ignored.
+        csv_paths (list): List of up to 6 file paths (strings). Empty strings or None are ignored.
         output_path (str, optional): If provided, save the figure to this path instead of showing.
         title (str, optional): Overall figure title.
         max_points (int): Maximum number of points to plot (downsampled if needed).
     """
-    # Filter out invalid paths
-    valid_paths = [p for p in csv_paths if p and os.path.isfile(p)]
+    # Filter out invalid paths: skip None, empty string, or non-existent files
+    valid_paths = [p for p in csv_paths if p and isinstance(p, str) and os.path.isfile(p)]
     if not valid_paths:
         print("No valid CSV files to plot.")
         return

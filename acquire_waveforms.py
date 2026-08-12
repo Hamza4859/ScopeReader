@@ -72,9 +72,9 @@ def acquire_waveforms(directory, num_phases, scope_ip=SCOPE_IP):
         scope_ip (str): IP address of the oscilloscope.
 
     Returns:
-        list: A list of 6 elements, each being the full path to the saved CSV
+        list: A list of 6 strings, each being the full path to the saved CSV
               for that channel (channel 1 -> index 0, ..., channel 6 -> index 5).
-              Channels that were not acquired have `None`.
+              Channels that were not acquired have an empty string "".
     """
     # Validate num_phases
     valid_phases = {3: [1,2], 6: [1,2,3,4], 9: [1,2,3,4,5,6]}
@@ -100,8 +100,8 @@ def acquire_waveforms(directory, num_phases, scope_ip=SCOPE_IP):
     byte_order_str = "MSBFirst" if BYTE_ORDER == "BIG" else "LSBFirst"
     scope.write(f":WAVeform:BYTeorder {byte_order_str}")
 
-    # We will collect paths for channels 1..6
-    result_paths = [None] * 6   # index 0 -> ch1, ..., 5 -> ch6
+    # We will collect paths for channels 1..6 - use empty string for missing
+    result_paths = [""] * 6   # index 0 -> ch1, ..., 5 -> ch6
 
     for ch in channels_to_read:
         print(f"\n--- Processing Channel {ch:02d} ---")
@@ -238,7 +238,7 @@ def acquire_waveforms(directory, num_phases, scope_ip=SCOPE_IP):
                 fmt=["%d", "%.8e", "%d", "%.6f"],
             )
 
-            # Store path in result list (index = ch-1)
+            # Store path (string) in result list
             result_paths[ch-1] = csv_path
 
             print(f"  --> CH{ch:02d} Summary: Min = {np.min(scaled_data):.3f} V | "
@@ -265,4 +265,5 @@ if __name__ == "__main__":
     paths = acquire_waveforms(args.dir, args.phases, args.ip)
     print("\nAcquisition complete. Generated CSVs:")
     for i, p in enumerate(paths, start=1):
-        print(f"  CH{i:02d}: {p if p else 'not acquired'}")
+        status = p if p else "not acquired"
+        print(f"  CH{i:02d}: {status}")

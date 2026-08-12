@@ -29,19 +29,17 @@ def main():
         sys.exit(1)
 
     print(f"=== Starting acquisition for {NUM_PHASES} phases ===")
-    # Acquire waveforms; returns a list of 6 paths (None for unused channels)
+    # Acquire waveforms; returns a list of 6 strings (empty for missing)
     paths = acquire_waveforms(BASE_DIR, NUM_PHASES)
 
     # Print which files were generated
     print("\n=== Acquisition complete ===")
     for i, p in enumerate(paths, start=1):
-        if p is not None:
-            print(f"CH{i:02d}: {p}")
-        else:
-            print(f"CH{i:02d}: (not acquired)")
+        status = p if p else "not acquired"
+        print(f"CH{i:02d}: {status}")
 
-    # Filter out None values for plotting
-    valid_paths = [p for p in paths if p is not None]
+    # Filter out empty strings for plotting
+    valid_paths = [p for p in paths if p]   # skip empty strings
     if valid_paths:
         print(f"\n=== Plotting {len(valid_paths)} waveform(s) ===")
         output_plot = os.path.join(BASE_DIR, "waveforms_plot.png")
