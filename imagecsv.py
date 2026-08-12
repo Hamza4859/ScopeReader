@@ -1,7 +1,7 @@
 import time
 import pyvisa
 
-SCOPE_IP = "10.24.98.202"
+SCOPE_IP = "10.24.98.206"
 
 # 1. Initialize Connection
 rm = pyvisa.ResourceManager("@py")
