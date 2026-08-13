@@ -7,28 +7,27 @@ Simply set NUM_PHASES to 3, 6, or 9 and run.
 
 import os
 import sys
-import shutil   # for deleting entire folder contents
+import shutil
 
 sys.dont_write_bytecode = True
 
 # Import the main functions from the helper modules
 from acquire_waveforms import acquire_waveforms
 from plot_waveforms import plot_csv_files
+from getPhases import get_phases_values   # <-- import from getPhases.py
 
 # ==================== CONFIGURATION ====================
-# Directory where CSV files will be stored
 BASE_DIR = r"C:\Users\hamza.rtelbennani\Desktop\Scope Reader\ScopeReader\csv waves"
-
-# Number of phases: 3 (ch1-2), 6 (ch1-4), or 9 (ch1-6)
-NUM_PHASES = 9  # <-- Change this to 3, 6, or 9 as needed
+NUM_PHASES = 9  # 3, 6, or 9
+SCOPE_IP = "10.24.98.206"
+PART_NUMBER = "ABC123"      # Replace with actual
+SERIAL_NUMBER = "SN001"     # Replace with actual
 # ======================================================
 
 def clean_folder(directory):
-    """Delete ALL contents (files and subfolders) inside the given directory."""
     if not os.path.exists(directory):
         os.makedirs(directory)
         return
-
     for item in os.listdir(directory):
         item_path = os.path.join(directory, item)
         try:
@@ -42,34 +41,47 @@ def clean_folder(directory):
             print(f"Could not remove {item_path}: {e}")
 
 def main():
-    # Validate NUM_PHASES
     if NUM_PHASES not in (3, 6, 9):
         print(f"Error: NUM_PHASES must be 3, 6, or 9; got {NUM_PHASES}")
         sys.exit(1)
 
-    # Clean the folder before acquisition
+    # Clean folder
     print(f"Cleaning folder: {BASE_DIR}")
     clean_folder(BASE_DIR)
 
+    # Acquire waveforms
     print(f"=== Starting acquisition for {NUM_PHASES} phases ===")
-    # Acquire waveforms; returns a list of 6 strings (empty for missing)
     paths = acquire_waveforms(BASE_DIR, NUM_PHASES)
 
-    # Print which files were generated
     print("\n=== Acquisition complete ===")
     for i, p in enumerate(paths, start=1):
         status = p if p else "not acquired"
         print(f"CH{i:02d}: {status}")
 
-    # Filter out empty strings for plotting
-    valid_paths = [p for p in paths if p]   # skip empty strings
+    # Get frequency from scope via getPhases
+    phase_count_str = str(NUM_PHASES)
+    # get_phases_values returns list of 7 values; first is frequency (channel 10)
+    values = get_phases_values(phase_count_str, scope_ip=SCOPE_IP)
+    frequency_hz = values[0] if values and values[0] != -9999.0 else None
+    if frequency_hz is None:
+        print("Warning: Could not retrieve frequency, setting to 0.0")
+        frequency_hz = 0.0
+
+    valid_paths = [p for p in paths if p]
     if valid_paths:
         print(f"\n=== Plotting {len(valid_paths)} waveform(s) ===")
         output_plot = os.path.join(BASE_DIR, "waveforms_plot.png")
-        plot_csv_files(valid_paths, output_path=output_plot, num_phases=NUM_PHASES)
+        plot_csv_files(
+            csv_paths=valid_paths,
+            ip_address=SCOPE_IP,
+            part_number=PART_NUMBER,
+            serial_number=SERIAL_NUMBER,
+            frequency_hz=frequency_hz,
+            output_path=output_plot,
+            num_phases=NUM_PHASES
+        )
     else:
         print("\nNo valid CSV files to plot.")
-
 
 if __name__ == "__main__":
     main()

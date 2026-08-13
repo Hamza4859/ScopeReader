@@ -1,30 +1,42 @@
+#!/usr/bin/env python
 """
 Plot waveforms from previously saved CSV files (produced by acquire_waveforms.py).
 
 Usage:
     from plot_waveforms import plot_csv_files
-    plot_csv_files(['./data/waveform_ch01.csv', './data/waveform_ch02.csv'],
-                   output_path='plot.png', num_phases=3)
+    plot_csv_files(
+        csv_paths=['./data/waveform_ch01.csv', './data/waveform_ch02.csv'],
+        ip_address='10.24.98.206',
+        part_number='ABC123',
+        serial_number='SN001',
+        frequency_hz=50.0,          # from getPhases.py
+        output_path='plot.png',
+        num_phases=3
+    )
 
     # or run as script:
-    python plot_waveforms.py --csvs ch01.csv ch02.csv ch03.csv ch04.csv --output plot.png --phases 6
+    python plot_waveforms.py --csvs ch01.csv ch02.csv ch03.csv ch04.csv \\
+        --ip 10.24.98.206 --pn ABC123 --sn SN001 --freq 50.0 --output plot.png --phases 6
 """
 
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-MAX_PLOT_POINTS = 50000   # downsampling for plotting
+# Configuration defaults
+LOGO_FILENAME = "logo.png"          # Image placed in the same directory as script
+MAX_PLOT_POINTS = 50000             # Downsampling for plotting
 
-# Fixed channel colors – updated to your specifications
+# Fixed channel colours
 CHANNEL_COLORS = {
     1: 'orange',
     2: 'green',
-    3: '#DC2BFF',   # purple
-    4: '#FF2B2B',   # bright red
-    5: '#2BB8FF',   # light blue
-    6: '#FF2B8A',   # pink
+    3: '#2BB8FF',   # light blue
+    4: '#FF2B8A',   # pink
+    5: '#DC2BFF',   # purple
+    6: '#FF2B2B',   # bright red
 }
+
 
 def peak_detect_downsample(x, y, max_points):
     n = len(y)
@@ -50,25 +62,30 @@ def peak_detect_downsample(x, y, max_points):
             y_res.extend([bin_y[max_idx], bin_y[min_idx]])
     return np.array(x_res), np.array(y_res)
 
-def plot_csv_files(csv_paths, output_path=None, title=None, max_points=MAX_PLOT_POINTS, num_phases=None):
+
+def plot_csv_files(csv_paths, ip_address, part_number, serial_number, frequency_hz,
+                   output_path=None, title=None,
+                   max_points=MAX_PLOT_POINTS, num_phases=None):
     """
     Plot up to 6 waveform CSV files in grouped subplots (two channels per plot).
     Groups are defined by phases: (1,2), (3,4), (5,6).
-    Channel colors: CH1=Orange, CH2=Green, CH3=#B78AFF, CH4=#FF2B2B, CH5=#8A8AFF, CH6=#FF2B8A.
+    frequency_hz is the line frequency (float) obtained from the scope.
     """
-    # Filter out invalid paths
     valid_paths = [p for p in csv_paths if p and isinstance(p, str) and os.path.isfile(p)]
     if not valid_paths:
         print("No valid CSV files to plot.")
         return
 
-    # Determine the number of phases from filenames if not provided
+    # Use the passed frequency
+    freq_str = f"{frequency_hz:.2f} Hz" if frequency_hz is not None else "N/A"
+
+    # Determine number of phases from filenames if not provided
     if num_phases is None:
         max_ch = 0
         for p in valid_paths:
             try:
                 basename = os.path.basename(p)
-                ch_str = basename.split('_')[1].split('.')[0]  # e.g., 'ch01'
+                ch_str = basename.split('_')[1].split('.')[0]
                 if ch_str.startswith('ch'):
                     ch = int(ch_str[2:])
                     if ch > max_ch:
@@ -84,7 +101,6 @@ def plot_csv_files(csv_paths, output_path=None, title=None, max_points=MAX_PLOT_
     elif num_phases not in (3, 6, 9):
         raise ValueError("num_phases must be 3, 6, or 9")
 
-    # Define channel pairs per phase
     if num_phases == 3:
         groups = [(1, 2)]
     elif num_phases == 6:
@@ -92,7 +108,6 @@ def plot_csv_files(csv_paths, output_path=None, title=None, max_points=MAX_PLOT_
     else:  # 9
         groups = [(1, 2), (3, 4), (5, 6)]
 
-    # Build a mapping from channel number to its data (time, voltage)
     channel_data = {}
     for p in valid_paths:
         try:
@@ -112,75 +127,104 @@ def plot_csv_files(csv_paths, output_path=None, title=None, max_points=MAX_PLOT_
             voltage = data[:, 3]
             channel_data[ch] = (time_sec, voltage)
         except Exception as e:
-            print(f"  Error loading {p}: {e}")
+            print(f"Error loading {p}: {e}")
             continue
 
-    # Determine number of subplots (one per group)
     num_plots = len(groups)
     if num_plots == 0:
         print("No valid data to plot.")
         return
 
-    # Set dark style and create figure with REDUCED SIZE
     plt.style.use('dark_background')
-    fig, axes = plt.subplots(num_plots, 1, figsize=(8, 2.0 * num_plots), sharex=True)   # <-- reduced from 12x2.5
-    if num_plots == 1:
-        axes = [axes]
-
+    fig = plt.figure(figsize=(10.5, 2.3 * num_plots))
     fig.patch.set_facecolor('black')
-    for ax in axes:
-        ax.set_facecolor('black')
 
-    # Plot each group
+    gs = fig.add_gridspec(num_plots, 2, width_ratios=[4, 1.1],
+                          wspace=0.15, hspace=0.35)
+
+    # Display PN, SN, and IP in top‑right corner
+    info_text = f"PN: {part_number}\nSN: {serial_number}\nIP: {ip_address}"
+    fig.text(0.98, 0.98, info_text,
+             transform=fig.transFigure, ha='right', va='top',
+             color='white', fontsize=9,
+             bbox=dict(boxstyle="round,pad=0.3",
+                       facecolor='black', edgecolor='#444444', alpha=0.7))
+
+    # Load logo (top‑left) if present
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    full_logo_path = os.path.join(script_dir, LOGO_FILENAME)
+    if os.path.exists(full_logo_path):
+        try:
+            logo_img = plt.imread(full_logo_path)
+            logo_ax = fig.add_axes([0.01, 0.85, 0.18, 0.14], anchor='NW', zorder=10)
+            logo_ax.imshow(logo_img)
+            logo_ax.axis('off')
+        except Exception as e:
+            print(f"Could not load logo image: {e}")
+
+    axes = []
     for idx, (ch1, ch2) in enumerate(groups):
-        ax = axes[idx]
-        # Plot ch1 if available
+        if idx == 0:
+            ax = fig.add_subplot(gs[idx, 0])
+        else:
+            ax = fig.add_subplot(gs[idx, 0], sharex=axes[0])
+        axes.append(ax)
+
+        ax.set_facecolor('black')
+        stats_text = []
+
+        # Plot CH1
         if ch1 in channel_data:
             t, v = channel_data[ch1]
             t_plot, v_plot = peak_detect_downsample(t, v, max_points)
             color1 = CHANNEL_COLORS.get(ch1, 'white')
             ax.plot(t_plot, v_plot, label=f"CH{ch1:02d}", color=color1, linewidth=0.8)
-            # Compute stats for annotation
-            min_v, max_v = np.min(v), np.max(v)
             rms_v = float(np.sqrt(np.mean(v**2)))
-            ax.text(0.01, 0.95, f"CH{ch1:02d}: Min={min_v:.3f}V Max={max_v:.3f}V RMS={rms_v:.4f}V",
-                    transform=ax.transAxes, fontsize=8, color='white',
-                    bbox=dict(boxstyle="round,pad=0.2", facecolor="black", edgecolor='white', alpha=0.7),
-                    verticalalignment='top')
+            stats_text.append(f"CH{ch1:02d} RMS: {rms_v:.4f} V")
         else:
-            ax.text(0.5, 0.5, f"CH{ch1:02d} not available", ha='center', va='center',
-                    transform=ax.transAxes, color='gray', fontsize=10)
+            stats_text.append(f"CH{ch1:02d}: N/A")
 
-        # Plot ch2 if available
+        # Plot CH2
         if ch2 in channel_data:
             t, v = channel_data[ch2]
             t_plot, v_plot = peak_detect_downsample(t, v, max_points)
             color2 = CHANNEL_COLORS.get(ch2, 'white')
             ax.plot(t_plot, v_plot, label=f"CH{ch2:02d}", color=color2, linewidth=0.8)
-            min_v, max_v = np.min(v), np.max(v)
             rms_v = float(np.sqrt(np.mean(v**2)))
-            ax.text(0.01, 0.85, f"CH{ch2:02d}: Min={min_v:.3f}V Max={max_v:.3f}V RMS={rms_v:.4f}V",
-                    transform=ax.transAxes, fontsize=8, color='white',
-                    bbox=dict(boxstyle="round,pad=0.2", facecolor="black", edgecolor='white', alpha=0.7),
-                    verticalalignment='top')
+            stats_text.append(f"CH{ch2:02d} RMS: {rms_v:.4f} V")
         else:
-            ax.text(0.5, 0.4, f"CH{ch2:02d} not available", ha='center', va='center',
-                    transform=ax.transAxes, color='gray', fontsize=10)
+            stats_text.append(f"CH{ch2:02d}: N/A")
+
+        stats_text.append(f"Line Freq: {freq_str}")
 
         ax.set_ylabel("Voltage (V)", fontsize=9, fontweight="bold", color='white')
-        ax.set_title(f"Group {idx+1}: CH{ch1:02d} & CH{ch2:02d}", fontsize=10, loc='left', color='white')
+        ax.set_title(f"Group {idx+1}: CH{ch1:02d} & CH{ch2:02d}",
+                     fontsize=10, loc='left', color='white')
         ax.grid(True, linestyle="--", alpha=0.3, color='gray')
         ax.tick_params(colors='white')
 
-    axes[-1].set_xlabel("Time Relative to Trigger (s)", fontsize=10, fontweight="bold", color='white')
+        # Side panel for stats
+        ax_stats = fig.add_subplot(gs[idx, 1])
+        ax_stats.set_facecolor('black')
+        ax_stats.axis('off')
+        info_box = "\n".join(stats_text)
+        ax_stats.text(0.05, 0.5, info_box,
+                      transform=ax_stats.transAxes, fontsize=8, color='white',
+                      verticalalignment='center', horizontalalignment='left',
+                      bbox=dict(boxstyle="round,pad=0.5",
+                                facecolor="#111111", edgecolor='#444444', alpha=0.9))
+
+    axes[-1].set_xlabel("Time Relative to Trigger (s)",
+                        fontsize=10, fontweight="bold", color='white')
 
     if title:
-        fig.suptitle(title, fontsize=14, color='white')
+        fig.suptitle(title, fontsize=14, color='white', y=0.98)
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.02, 0.98, 0.84])
 
     if output_path:
-        fig.savefig(output_path, dpi=200, bbox_inches="tight", facecolor=fig.get_facecolor())
+        fig.savefig(output_path, dpi=200, bbox_inches="tight",
+                    facecolor=fig.get_facecolor())
         print(f"Plot saved to {output_path}")
 
     print("Displaying plot... Close the window to complete script execution.")
@@ -191,14 +235,22 @@ def plot_csv_files(csv_paths, output_path=None, title=None, max_points=MAX_PLOT_
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Plot waveforms from CSV files")
-    parser.add_argument("--csvs", nargs="+", required=True, help="List of CSV file paths (up to 6)")
+    parser.add_argument("--csvs", nargs="+", required=True,
+                        help="List of CSV file paths (up to 6)")
+    parser.add_argument("--ip", required=True, help="Oscilloscope IP address")
+    parser.add_argument("--pn", required=True, help="Part Number")
+    parser.add_argument("--sn", required=True, help="Serial Number")
+    parser.add_argument("--freq", type=float, required=True,
+                        help="Line frequency in Hz (from scope)")
     parser.add_argument("--output", help="Output image file path (optional)")
     parser.add_argument("--title", help="Figure title")
-    parser.add_argument("--phases", type=int, choices=[3,6,9], help="Number of phases (3, 6, or 9). If omitted, inferred from filenames.")
+    parser.add_argument("--phases", type=int, choices=[3,6,9],
+                        help="Number of phases (3, 6, or 9).")
     args = parser.parse_args()
 
     if len(args.csvs) > 6:
         print("Warning: More than 6 CSV files provided; only first 6 will be used.")
         args.csvs = args.csvs[:6]
 
-    plot_csv_files(args.csvs, args.output, args.title, num_phases=args.phases)
+    plot_csv_files(args.csvs, args.ip, args.pn, args.sn, args.freq,
+                   args.output, args.title, num_phases=args.phases)

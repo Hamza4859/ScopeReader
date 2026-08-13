@@ -135,8 +135,6 @@ def get_phases_values(
 
 target_ip = SCOPE_IP
 
-start_scope(target_ip)
-
 
 # Target IP address (defaults to SCOPE_IP if omitted)
 
