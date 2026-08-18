@@ -130,20 +130,3 @@ def get_phases_values(
     padded_values = (cleaned_values + [-9999.0] * 7)[:7]
 
     return padded_values
-
-
-
-target_ip = SCOPE_IP
-
-
-# Target IP address (defaults to SCOPE_IP if omitted)
-
-
-# Testing all 3 dynamic phase usages
-phases_3 = get_phases_values("3", scope_ip=target_ip)
-phases_6 = get_phases_values("6", scope_ip=target_ip)
-phases_9 = get_phases_values("9", scope_ip=target_ip)
-
-print(f"3 Phases (len={len(phases_3)}): {phases_3}")
-print(f"6 Phases (len={len(phases_6)}): {phases_6}")
-print(f"9 Phases (len={len(phases_9)}): {phases_9}")
