@@ -66,11 +66,7 @@ def peak_detect_downsample(x, y, max_points):
 def plot_csv_files(csv_paths, ip_address, part_number, serial_number, frequency_hz,
                    output_path=None, title=None,
                    max_points=MAX_PLOT_POINTS, num_phases=None):
-    """
-    Plot up to 6 waveform CSV files in grouped subplots (two channels per plot).
-    Groups are defined by phases: (1,2), (3,4), (5,6).
-    frequency_hz is the line frequency (float) obtained from the scope.
-    """
+
     valid_paths = [p for p in csv_paths if p and isinstance(p, str) and os.path.isfile(p)]
     if not valid_paths:
         print("No valid CSV files to plot.")

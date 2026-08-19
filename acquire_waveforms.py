@@ -1,14 +1,3 @@
-"""
-Acquire waveform data from Yokogawa DL850E and save as CSV files.
-
-Usage:
-    from acquire_waveforms import acquire_waveforms
-    paths = acquire_waveforms('./data', num_phases=6)
-
-    # or run as script:
-    python acquire_waveforms.py --dir ./data --phases 6
-"""
-
 import os
 import numpy as np
 import pyvisa
@@ -60,22 +49,7 @@ def calculate_physical_values(
         return (range_val * raw_data * 10.0) / division + offset_val
 
 def acquire_waveforms(directory, num_phases, scope_ip=SCOPE_IP):
-    """
-    Acquire waveforms from the DL850E and save CSV files.
 
-    Parameters:
-        directory (str): Path to folder where CSV files will be saved.
-        num_phases (int): 3, 6, or 9. Determines how many channels to read:
-                          3 -> channels 1,2
-                          6 -> channels 1,2,3,4
-                          9 -> channels 1,2,3,4,5,6
-        scope_ip (str): IP address of the oscilloscope.
-
-    Returns:
-        list: A list of 6 strings, each being the full path to the saved CSV
-              for that channel (channel 1 -> index 0, ..., channel 6 -> index 5).
-              Channels that were not acquired have an empty string "".
-    """
     # Validate num_phases
     valid_phases = {3: [1,2], 6: [1,2,3,4], 9: [1,2,3,4,5,6]}
     if num_phases not in valid_phases:

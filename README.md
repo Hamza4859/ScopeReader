@@ -1,17 +1,21 @@
 # ScopeReader
 
-This project is to Help retrieve crucial informattion from BEMF Test
+This project is to Help retrieve crucial informattion for the BEMF Test
 
+HOW TO USE:
 
-All libs to install:
-python -m pip install pyvisa pyvisa-py
+acquire_waveforms : retrieve all data points from the scope for specific waves, compile the data into a .csv
 
+createFolder.py : Create a Folder and move .csv in it.
 
-HOW TO RUN:
+diagnosis.py : Diagnosis for each Channel of the Scope
 
-For 3 phases motors:
-Run 3phases.py
+findMax.py : Analyse .csv to retrieve max values
 
-To come:
-6phases.py
-9phases.py
+getPhases: retrieve RMS and frequency from specific channels
+
+main.py : Confirm connection with the Scope
+
+plot_waveforms : Plot waveforms from .csv
+
+test_waveforms.py : Test acquires and plot waveforms
