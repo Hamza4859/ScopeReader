@@ -18,7 +18,7 @@ from getPhases import get_phases_values   # <-- import from getPhases.py
 
 # ==================== CONFIGURATION ====================
 BASE_DIR = r"C:\Users\hamza.rtelbennani\Desktop\Scope Reader\ScopeReader\csv waves"
-NUM_PHASES = 9  # 3, 6, or 9
+NUM_PHASES = 3  # 3, 6, or 9
 SCOPE_IP = "10.24.98.206"
 PART_NUMBER = "ABC123"      # Replace with actual
 SERIAL_NUMBER = "SN001"     # Replace with actual
@@ -70,14 +70,13 @@ def main():
     valid_paths = [p for p in paths if p]
     if valid_paths:
         print(f"\n=== Plotting {len(valid_paths)} waveform(s) ===")
-        output_plot = os.path.join(BASE_DIR, "waveforms_plot.png")
         plot_csv_files(
             csv_paths=valid_paths,
             ip_address=SCOPE_IP,
             part_number=PART_NUMBER,
             serial_number=SERIAL_NUMBER,
             frequency_hz=frequency_hz,
-            output_path=output_plot,
+            output_path=BASE_DIR,
             num_phases=NUM_PHASES
         )
     else:

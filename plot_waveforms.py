@@ -10,13 +10,13 @@ Usage:
         part_number='ABC123',
         serial_number='SN001',
         frequency_hz=50.0,          # from getPhases.py
-        output_path='plot.png',
+        output_path='./data',       # Directory path where plot.jpeg will be saved
         num_phases=3
     )
 
     # or run as script:
-    python plot_waveforms.py --csvs ch01.csv ch02.csv ch03.csv ch04.csv \\
-        --ip 10.24.98.206 --pn ABC123 --sn SN001 --freq 50.0 --output plot.png --phases 6
+    python plot_waveforms.py --csvs ch01.csv ch02.csv ch03.csv ch04.csv \
+        --ip 10.24.98.206 --pn ABC123 --sn SN001 --freq 50.0 --output ./data --phases 6
 """
 
 import os
@@ -219,9 +219,14 @@ def plot_csv_files(csv_paths, ip_address, part_number, serial_number, frequency_
     plt.tight_layout(rect=[0.02, 0.02, 0.98, 0.84])
 
     if output_path:
-        fig.savefig(output_path, dpi=200, bbox_inches="tight",
+        # Ensure the directory exists
+        os.makedirs(output_path, exist_ok=True)
+        # Construct path to always name the output as plot.jpeg
+        file_save_path = os.path.join(output_path, "plot.jpeg")
+        
+        fig.savefig(file_save_path, dpi=200, bbox_inches="tight",
                     facecolor=fig.get_facecolor())
-        print(f"Plot saved to {output_path}")
+        print(f"Plot saved to {file_save_path}")
 
     print("Displaying plot... Close the window to complete script execution.")
     plt.show()
@@ -238,7 +243,7 @@ if __name__ == "__main__":
     parser.add_argument("--sn", required=True, help="Serial Number")
     parser.add_argument("--freq", type=float, required=True,
                         help="Line frequency in Hz (from scope)")
-    parser.add_argument("--output", help="Output image file path (optional)")
+    parser.add_argument("--output", help="Output directory path (optional)")
     parser.add_argument("--title", help="Figure title")
     parser.add_argument("--phases", type=int, choices=[3,6,9],
                         help="Number of phases (3, 6, or 9).")

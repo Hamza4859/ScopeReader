@@ -8,7 +8,7 @@ SCOPE_IP = "10.24.98.206"
 TIMEOUT_MS = 5000  # 5 seconds timeout for commands
 
 
-def connect_to_scope(ip: str) -> pyvisa.Resource:
+def connect_to_scope(ip: str) -> pyvisa.Resource: 
     resource_name = f"TCPIP0::{ip}::INSTR"
     
     # Initialize PyVISA with the pure-Python backend
