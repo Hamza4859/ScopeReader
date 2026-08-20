@@ -191,25 +191,24 @@ def acquire_waveforms(directory, num_phases, scope_ip=SCOPE_IP):
                 step = int(np.ceil(samples_retrieved / CSV_MAX_POINTS))
                 indices = indices[::step]
                 time_vector = time_vector[::step]
-                raw_data = raw_data[::step]
                 scaled_data_csv = scaled_data[::step]
                 print(f"  Decimating CSV to ~{len(scaled_data_csv):,} samples (1 in {step})")
             else:
                 scaled_data_csv = scaled_data
                 print(f"  Exporting CSV at full rate ({len(scaled_data):,} samples)")
 
-            # Save CSV
+            # Save CSV (Sample_Index, Time_Relative_Trigger_s, Voltage_V)
             csv_filename = f"waveform_ch{ch:02d}.csv"
             csv_path = os.path.join(directory, csv_filename)
-            export_matrix = np.column_stack((indices, time_vector, raw_data, scaled_data_csv))
-            header_str = "Sample_Index,Time_Relative_Trigger_s,Raw_Count,Voltage_V"
+            export_matrix = np.column_stack((indices, time_vector, scaled_data_csv))
+            header_str = "Sample_Index,Time_Relative_Trigger_s,Voltage_V"
             np.savetxt(
                 csv_path,
                 export_matrix,
                 delimiter=",",
                 header=header_str,
                 comments="",
-                fmt=["%d", "%.8e", "%d", "%.6f"],
+                fmt=["%d", "%.8e", "%.6f"],
             )
 
             # Store path (string) in result list

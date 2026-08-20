@@ -120,7 +120,7 @@ def plot_csv_files(csv_paths, ip_address, part_number, serial_number, frequency_
             if data.ndim == 1:
                 data = data.reshape(1, -1)
             time_sec = data[:, 1]
-            voltage = data[:, 3]
+            voltage = data[:, 2]
             channel_data[ch] = (time_sec, voltage)
         except Exception as e:
             print(f"Error loading {p}: {e}")
