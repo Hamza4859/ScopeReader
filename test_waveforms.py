@@ -18,7 +18,7 @@ from getPhases import get_phases_values   # <-- import from getPhases.py
 
 # ==================== CONFIGURATION ====================
 BASE_DIR = r"C:\Users\hamza.rtelbennani\Desktop\Scope Reader\ScopeReader\csv waves"
-NUM_PHASES = 3  # 3, 6, or 9
+NUM_PHASES = 6  # 3, 6, or 9
 SCOPE_IP = "10.24.98.206"
 PART_NUMBER = "ABC123"      # Replace with actual
 SERIAL_NUMBER = "SN001"     # Replace with actual
