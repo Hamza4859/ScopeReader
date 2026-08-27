@@ -11,10 +11,10 @@ TIMEOUT_MS = 5000  # 5 seconds timeout for commands
 def connect_to_scope(ip: str) -> pyvisa.Resource: 
     resource_name = f"TCPIP0::{ip}::INSTR"
     
-    # Initialize PyVISA with the pure-Python backend
-    rm = pyvisa.ResourceManager("@py")
+    # Initialize PyVISA using the installed NI-VISA C-library driver
+    rm = pyvisa.ResourceManager()
     
-    print(f"Connecting to oscilloscope at {ip}...")
+    print(f"Connecting to oscilloscope at {ip} using NI-VISA...")
     try:
         scope = rm.open_resource(resource_name)
         scope.timeout = TIMEOUT_MS
@@ -35,8 +35,7 @@ def main():
     # 1. Connect
     scope = connect_to_scope(SCOPE_IP)
 
-    # 2. Example: Query basic settings or trigger a measurement
-    # (You can add your custom SCPI commands here)
+    # 2. Scope operations
     print("\n--- Scope Status ---")
     
     # Close connection cleanly when finished
